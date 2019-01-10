@@ -27,7 +27,7 @@ and ELB. Note that given the simplicity of the app this is most-likely not neede
  
 #### Security and authentication
 
-This application has not security or authentication. We would need to add some before making it production ready. 
+This application has no security or authentication. We would need to add some before making it production ready. 
 
 ##### Metrics and logging
 
