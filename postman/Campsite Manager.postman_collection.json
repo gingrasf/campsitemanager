@@ -1,0 +1,169 @@
+{
+	"info": {
+		"_postman_id": "fc6f9be7-a825-4d69-ba62-0b6805b0722b",
+		"name": "Campsite Manager",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Get All Reservations",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "localhost:8080/campsite/reservation",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"campsite",
+						"reservation"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Request Campsite Availability for default search period (1 month)",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "localhost:8080/campsite/availability",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"campsite",
+						"availability"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Request Campsite Availability until a specific date",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "localhost:8080/campsite/availability?until=2019-01-24",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"campsite",
+						"availability"
+					],
+					"query": [
+						{
+							"key": "until",
+							"value": "2019-01-24"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create a new reservation",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"user\": {\n        \"email\": \"test@test.com\",\n        \"fullName\": \"Test Person\"\n    },\n    \"startDate\": \"2019-01-15\",\n    \"endDate\": \"2019-01-16\"\n}"
+				},
+				"url": {
+					"raw": "localhost:8080/campsite/reservation",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"campsite",
+						"reservation"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Delete a Campsite Reservation",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "localhost:8080/campsite/reservation/461cbb75-7cf9-45db-926c-74e265116b6a",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"campsite",
+						"reservation",
+						"461cbb75-7cf9-45db-926c-74e265116b6a"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Update a Campsite Reservation",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"user\": {\n        \"email\": \"test@test.com\",\n        \"fullName\": \"Test Person\"\n    },\n    \"startDate\": \"2019-01-17\",\n    \"endDate\": \"2019-01-18\"\n}"
+				},
+				"url": {
+					"raw": "localhost:8080/campsite/reservation/34a5b730-aa44-4d2d-91b8-beba9db8c121",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"campsite",
+						"reservation",
+						"34a5b730-aa44-4d2d-91b8-beba9db8c121"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
