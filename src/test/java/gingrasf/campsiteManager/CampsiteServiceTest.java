@@ -1,6 +1,7 @@
 package gingrasf.campsiteManager;
 
-import gingrasf.campsiteManager.io.CampsiteRepository;
+import gingrasf.campsiteManager.persistence.AvailableDateLockRepository;
+import gingrasf.campsiteManager.persistence.CampsiteRepository;
 import gingrasf.campsiteManager.model.CampsiteAvailability;
 import gingrasf.campsiteManager.model.CampsiteReservation;
 import gingrasf.campsiteManager.model.User;
@@ -28,8 +29,12 @@ import static org.mockito.Mockito.when;
 public class CampsiteServiceTest {
 
     public static final int MAX_RESERVATION_DURATION = 3;
+
     @Mock
     CampsiteRepository repository;
+
+    @Mock
+    AvailableDateLockRepository availableDateLockRepository;
 
     @Mock
     CampsiteReservationValidator validator;
@@ -39,7 +44,8 @@ public class CampsiteServiceTest {
     @Before
     public void setup() {
         MockitoAnnotations.initMocks(this);
-        service = new CampsiteService(repository, validator);
+        service = new CampsiteService(repository, availableDateLockRepository, validator);
+        when(availableDateLockRepository.lockAvailableDate(any(), any())).thenReturn(true);
     }
 
     @Test(expected = RuntimeException.class)

@@ -1,7 +1,6 @@
 package gingrasf.campsiteManager.model;
 
 import lombok.Builder;
-import lombok.NoArgsConstructor;
 import lombok.Value;
 
 import java.time.LocalDate;

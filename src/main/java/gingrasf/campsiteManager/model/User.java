@@ -5,7 +5,6 @@ import lombok.Builder;
 import lombok.NoArgsConstructor;
 import lombok.Value;
 import org.springframework.data.annotation.Id;
-import org.springframework.lang.NonNull;
 import org.springframework.validation.annotation.Validated;
 
 import javax.validation.constraints.Email;
