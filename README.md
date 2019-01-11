@@ -20,15 +20,16 @@ Campsite manager is a REST API that manage reservation for a single campsite wit
 
 For the sake of simplicity an in-memory embeded mongo db instance was use as a persistence layer. This obviously is 
 not production ready as it can't be scaled nor will actually persist the data when the server is restarted. To make it 
-production ready we could easily swap the in-memory mongo db by a real mongo db culsters. To help with CI/CD I would use 
-Kubernetes/Docker to manage/deploy thoses. A mongo db cluster would indeed work, but to have things simpler I would advocate 
-using a cloud database like AWS DynamoDB instead of Mongo to avoid having to maintains the mongo instance (version upgrade, etc) 
+production ready we could easily swap the in-memory mongo db by a real mongo db culster (at least two instances for reliability). 
+To help with CI/CD I would use Kubernetes/Docker to manage/deploy thoses. A mongo db cluster would indeed work, but to have things simpler 
+I would advocate using a cloud database like AWS DynamoDB instead of Mongo to avoid having to maintains the mongo instance (version upgrade, etc) 
 and make scalability super simple. Another option could be a Redis instance.
 
 #### REST API Scalability and reliability
 
-To have full scalability to handle a huge number of request, we would need to have multiple docker instances for the application behind
-and ELB. Note that given the simplicity of the app this is most-likely not needed. We still want at least two instances though for reliability.
+To have scalability to handle a huge number of request, 
+we would need to have multiple docker instances for the application behind and ELB. Note that given the simplicity of the app this is most-likely not needed. 
+We still want at least two instances though for reliability.
  
 #### Security and authentication
 
@@ -38,6 +39,10 @@ This application has no security or authentication. We would need to add some be
 
 This application has no metrics or logging. Some would need to be added before it is considered production ready. Both are
 very easy to add using SLF4J and spring boot metrics. 
+
+We would also need monitoring and some form of alerting systems, but that is greatly dependent on the infrastructure where we
+deploy it. Assuming AWS we would need to setup cloud watch with some basic alarms (check on the nb of http 5xx seen by the ELB for example)
+and auto-scaling.
 
 ### How to start the Campsite Manager application
 Campsite Manager is a simple spring boot app, as such It can be [launched in multiple ways](https://docs.spring.io/spring-boot/docs/current/reference/html/using-boot-running-your-application.html)
@@ -59,5 +64,7 @@ Once the application is running, it can be used as a REST API. A way to do that 
 
 
 ### Dev environment
+
+This project requires maven and java 8+.
 
 This projet uses [lombok](https://projectlombok.org/) so you need to make sure it is properly installed.
