@@ -6,7 +6,6 @@ import gingrasf.campsiteManager.model.User;
 import gingrasf.campsiteManager.persistence.AvailableDateLockRepository;
 import gingrasf.campsiteManager.persistence.CampsiteRepository;
 
-import javax.validation.constraints.NotNull;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -44,7 +43,7 @@ public class CampsiteService {
         return CampsiteAvailability.builder().availableDates(availableDates).searchPeriodStart(from).searchPeriodEnd(until).build();
     }
 
-    public CampsiteReservation createReservation(User user, LocalDate startDate, LocalDate endDate) throws InterruptedException {
+    public CampsiteReservation createReservation(User user, LocalDate startDate, LocalDate endDate) {
         validator.validateReservation(startDate, endDate);
         validator.validateUser(user);
 
@@ -107,14 +106,14 @@ public class CampsiteService {
         return repository.findAll();
     }
 
-    public CampsiteReservation updateReservation(String id, CampsiteReservation reservation) throws InterruptedException {
+    public CampsiteReservation updateReservation(String id, CampsiteReservation reservation) {
         final CampsiteReservation entity = repository.findById(id)
                 .orElseThrow(() -> new NoSuchElementException(format("No reservation with id=%s was found", id)));
         if (!entity.getUser().equals(reservation.getUser())) {
             throw new IllegalArgumentException("It's not possible to change the owner of a reservation, only the reservation time can be changed");
         }
-        @NotNull final LocalDate startDate = reservation.getStartDate();
-        @NotNull final LocalDate endDate = reservation.getEndDate();
+        final LocalDate startDate = reservation.getStartDate();
+        final LocalDate endDate = reservation.getEndDate();
         validator.validateReservation(startDate, endDate);
         if(lockDatesForProcessing(startDate, endDate)) {
             try {
@@ -130,7 +129,7 @@ public class CampsiteService {
 
     }
 
-    public void delete(String id) {
+    public void deleteReservation(String id) {
         final CampsiteReservation entity = repository.findById(id)
                 .orElseThrow(() -> new NoSuchElementException(format("No reservation with id=%s was found", id)));
         repository.delete(entity);

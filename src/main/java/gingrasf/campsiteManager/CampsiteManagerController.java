@@ -38,7 +38,7 @@ public class CampsiteManagerController {
 
     @PutMapping("/reservation")
     @Transactional
-    public String createReservation(@Valid @RequestBody CampsiteReservation reservation) throws InterruptedException {
+    public String createReservation(@Valid @RequestBody CampsiteReservation reservation) {
         return campsiteService.createReservation(reservation.getUser(), reservation.getStartDate(), reservation.getEndDate()).getId();
     }
     @GetMapping("/reservation")
@@ -48,11 +48,11 @@ public class CampsiteManagerController {
 
     @DeleteMapping("/reservation/{id}")
     public void delete(@PathVariable("id") String id) {
-        campsiteService.delete(id);
+        campsiteService.deleteReservation(id);
     }
 
     @PostMapping("/reservation/{id}")
-    public CampsiteReservation update(@PathVariable("id") String id, @Valid @RequestBody CampsiteReservation reservation) throws InterruptedException {
+    public CampsiteReservation update(@PathVariable("id") String id, @Valid @RequestBody CampsiteReservation reservation) {
         return campsiteService.updateReservation(id, reservation);
     }
 }

@@ -22,7 +22,14 @@ public class User implements Serializable {
     @Id
     @Email
     @NotEmpty
+    /**
+     * A valid email address to reach the user
+     */
     String email;
+
     @NotEmpty
+    /**
+     * The full name of the user
+     */
     String fullName;
 }

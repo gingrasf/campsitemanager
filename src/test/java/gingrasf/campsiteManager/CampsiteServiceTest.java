@@ -48,17 +48,6 @@ public class CampsiteServiceTest {
         when(availableDateLockRepository.lockAvailableDate(any(), any())).thenReturn(true);
     }
 
-    @Test(expected = RuntimeException.class)
-    public void whenRepositoryThrowsAnExceptionPropagateIt() {
-        final LocalDate now = LocalDate.now();
-        final LocalDate until = now.plusMonths(2);
-
-        doThrow(new RuntimeException("BOOM!")).when(repository.findAll());
-
-        service.getAvailabilityBetween(now, until);
-    }
-
-
     // Get Availability Cases
     @Test
     public void whenQueryingAvailabilityWeGetBasicInfo() {
@@ -173,7 +162,17 @@ public class CampsiteServiceTest {
         service.getAvailabilityBetween(yesterday, now);
     }
 
-    // Get Availability Cases
+    @Test(expected = RuntimeException.class)
+    public void whenRepositoryThrowsAnExceptionPropagateIt() {
+        final LocalDate now = LocalDate.now();
+        final LocalDate until = now.plusMonths(2);
+
+        doThrow(new RuntimeException("BOOM!")).when(repository.findAll());
+
+        service.getAvailabilityBetween(now, until);
+    }
+
+    // Get All Reservations Cases
     @Test
     public void whenRequestingAllReservationsWeGetThem() {
         final LocalDate start = LocalDate.now().plusDays(1);
@@ -198,9 +197,15 @@ public class CampsiteServiceTest {
         assertThat(campsiteReservations).isEmpty();
     }
 
+    @Test(expected = RuntimeException.class)
+    public void whenWeGetAllReservationAndRepositoryThrowsAnExceptionPropagateIt() {
+        doThrow(new RuntimeException("BOOM!")).when(repository.findAll());
+        service.getAllReservation();
+    }
+
     // Create cases
     @Test
-    public void whenCreatingAOneDayReservationForTomorrowItShouldWork() throws InterruptedException {
+    public void whenCreatingAOneDayReservationForTomorrowItShouldWork() {
         final LocalDate tomorrow = LocalDate.now().plusDays(1);
         final LocalDate dayAfterTomorrow = tomorrow.plusDays(1);
         final User validUser = buildValidUser();
@@ -217,7 +222,7 @@ public class CampsiteServiceTest {
     }
 
     @Test
-    public void whenCreatingAReservationForMaxDurationForTomorrowItShouldWork() throws InterruptedException {
+    public void whenCreatingAReservationForMaxDurationForTomorrowItShouldWork() {
         final LocalDate tomorrow = LocalDate.now().plusDays(1);
         final LocalDate until = tomorrow.plusDays(MAX_RESERVATION_DURATION);
         final User validUser = buildValidUser();
@@ -234,7 +239,7 @@ public class CampsiteServiceTest {
     }
 
     @Test
-    public void whenCreatingAReservationInOneMonthItShouldWork() throws InterruptedException {
+    public void whenCreatingAReservationInOneMonthItShouldWork() {
         final LocalDate inOneMonth = LocalDate.now().plusMonths(1);
         final LocalDate start = inOneMonth;
         final LocalDate until = inOneMonth.plusDays(1);
@@ -252,7 +257,7 @@ public class CampsiteServiceTest {
     }
 
     @Test(expected = CampsiteReservationConflictException.class)
-    public void whenCreatingAReservationForADayAlreadyReservedThrowConflictException() throws InterruptedException {
+    public void whenCreatingAReservationForADayAlreadyReservedThrowConflictException() {
         final LocalDate tomorrow = LocalDate.now().plusDays(1);
         final LocalDate until = tomorrow.plusDays(1);
         final User validUser = buildValidUser();
@@ -264,7 +269,7 @@ public class CampsiteServiceTest {
     }
 
     @Test(expected = CampsiteReservationConflictException.class)
-    public void whenCreatingAReservationForMultiDaysWithOneAlreadyReservedThrowConflictException() throws InterruptedException {
+    public void whenCreatingAReservationForMultiDaysWithOneAlreadyReservedThrowConflictException() {
         final LocalDate tomorrow = LocalDate.now().plusDays(1);
         final LocalDate until = tomorrow.plusDays(MAX_RESERVATION_DURATION);
         final User validUser = buildValidUser();
@@ -276,7 +281,7 @@ public class CampsiteServiceTest {
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void whenCreatingAnInvalidReservationThrowException() throws InterruptedException {
+    public void whenCreatingAnInvalidReservationThrowException() {
         final LocalDate tomorrow = LocalDate.now().plusDays(1);
         final LocalDate until = tomorrow.plusDays(MAX_RESERVATION_DURATION + 1);
         final User validUser = buildValidUser();
@@ -287,10 +292,31 @@ public class CampsiteServiceTest {
         service.createReservation(validUser, tomorrow, until);
     }
 
+    @Test(expected = CampsiteReservationConflictException.class)
+    public void whenTheLockIsNotAcquiredOnAnInsertThrowConflictException() {
+        final LocalDate tomorrow = LocalDate.now().plusDays(1);
+        final LocalDate until = tomorrow.plusDays(MAX_RESERVATION_DURATION + 1);
+        final User validUser = buildValidUser();
+
+        when(availableDateLockRepository.lockAvailableDate(any(), any())).thenReturn(false);
+
+        service.createReservation(validUser, tomorrow, until);
+    }
+
+
+    @Test(expected = RuntimeException.class)
+    public void whenWeCreateReservationAndRepositoryThrowsAnExceptionPropagateIt() {
+        final LocalDate tomorrow = LocalDate.now().plusDays(1);
+        final LocalDate until = tomorrow.plusDays(1);
+        final User validUser = buildValidUser();
+        doThrow(new RuntimeException("BOOM!")).when(repository.save(any()));
+        service.createReservation(validUser, tomorrow, until);
+    }
+
 
     // Update cases
     @Test
-    public void whenShiftingAnExistingReservationToAnotherAvailableTimeItShouldWork() throws InterruptedException {
+    public void whenShiftingAnExistingReservationToAnotherAvailableTimeItShouldWork() {
         final LocalDate start = LocalDate.now().plusDays(1);
         final LocalDate end = start.plusDays(1);
         final User validUser = buildValidUser();
@@ -305,7 +331,6 @@ public class CampsiteServiceTest {
         when(repository.save(any())).thenAnswer(i -> i.getArguments()[0]);
 
 
-
         final CampsiteReservation campsiteReservation = service.updateReservation(existingId, newReservation);
 
         assertThat(campsiteReservation.getStartDate()).isEqualTo(newStart);
@@ -315,7 +340,7 @@ public class CampsiteServiceTest {
     }
 
     @Test(expected = CampsiteReservationConflictException.class)
-    public void whenShiftingAnExistingReservationToANonAvailableTimeThrowConflictException() throws InterruptedException {
+    public void whenShiftingAnExistingReservationToANonAvailableTimeThrowConflictException() {
         final LocalDate start = LocalDate.now().plusDays(1);
         final LocalDate end = start.plusDays(1);
         final User validUser = buildValidUser();
@@ -332,10 +357,10 @@ public class CampsiteServiceTest {
         when(repository.save(any())).thenAnswer(i -> i.getArguments()[0]);
 
         service.updateReservation(existingId, newReservation);
-   }
+    }
 
     @Test(expected = NoSuchElementException.class)
-    public void whenUpdatingAReservationThatDoesNotExistThrowNoSuchElementException() throws InterruptedException {
+    public void whenUpdatingAReservationThatDoesNotExistThrowNoSuchElementException() {
         final LocalDate start = LocalDate.now().plusDays(1);
         final User validUser = buildValidUser();
         final String nonExistingId = "some-test-unique-id";
@@ -351,11 +376,11 @@ public class CampsiteServiceTest {
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void whenUpdatingAReservationWithADifferentUserThrowException() throws InterruptedException {
+    public void whenUpdatingAReservationWithADifferentUserThrowException() {
         final LocalDate start = LocalDate.now().plusDays(1);
         final LocalDate end = start.plusDays(1);
         final User validUser = buildValidUser();
-        final User newGuy =  User.builder().email("newguy@test.com").fullName("New Guy").build();
+        final User newGuy = User.builder().email("newguy@test.com").fullName("New Guy").build();
         final String existingId = "some-test-unique-id";
         final CampsiteReservation existingReservation = CampsiteReservation.builder().id(existingId).startDate(start).endDate(end).user(validUser).build();
 
@@ -372,7 +397,7 @@ public class CampsiteServiceTest {
 
 
     @Test(expected = IllegalArgumentException.class)
-    public void whenUpdatingAReservationWithInvalidDatesThrowException() throws InterruptedException {
+    public void whenUpdatingAReservationWithInvalidDatesThrowException() {
         final LocalDate start = LocalDate.now().plusDays(1);
         final LocalDate end = start.plusDays(1);
         final User validUser = buildValidUser();
@@ -392,6 +417,46 @@ public class CampsiteServiceTest {
         service.updateReservation(existingId, newReservation);
     }
 
+    @Test(expected = CampsiteReservationConflictException.class)
+    public void whenTheLockIsNotAcquiredOnAnUpdateThrowConflictException() {
+        final LocalDate start = LocalDate.now().plusDays(1);
+        final LocalDate end = start.plusDays(1);
+        final User validUser = buildValidUser();
+        final String existingId = "some-test-unique-id";
+        final CampsiteReservation existingReservation = CampsiteReservation.builder().id(existingId).startDate(start).endDate(end).user(validUser).build();
+
+        final LocalDate newStart = start.plusDays(3);
+        final LocalDate newEnd = end.plusDays(3);
+        final CampsiteReservation newReservation = CampsiteReservation.builder().id(existingId).startDate(newStart).endDate(newEnd).user(validUser).build();
+
+        when(availableDateLockRepository.lockAvailableDate(any(), any())).thenReturn(false);
+        when(repository.findById(existingId)).thenReturn(ofNullable(existingReservation));
+        when(repository.save(any())).thenAnswer(i -> i.getArguments()[0]);
+
+
+        service.updateReservation(existingId, newReservation);
+    }
+
+    @Test(expected = RuntimeException.class)
+    public void whenWeUpdateReservationAndRepositoryThrowsAnExceptionPropagateIt() {
+        final LocalDate start = LocalDate.now().plusDays(1);
+        final LocalDate end = start.plusDays(1);
+        final User validUser = buildValidUser();
+        final String existingId = "some-test-unique-id";
+        final CampsiteReservation existingReservation = CampsiteReservation.builder().id(existingId).startDate(start).endDate(end).user(validUser).build();
+
+        final LocalDate newStart = start.plusDays(3);
+        final LocalDate newEnd = end.plusDays(3);
+        final CampsiteReservation newReservation = CampsiteReservation.builder().id(existingId).startDate(newStart).endDate(newEnd).user(validUser).build();
+
+        when(availableDateLockRepository.lockAvailableDate(any(), any())).thenReturn(false);
+        when(repository.findById(existingId)).thenReturn(ofNullable(existingReservation));
+        when(repository.save(any())).thenAnswer(i -> i.getArguments()[0]);
+
+        doThrow(new RuntimeException("BOOM!")).when(repository.save(any()));
+        service.updateReservation(existingId, newReservation);
+    }
+
     // Delete cases
     @Test
     public void whenDeletingAnExistingReservationItShouldWork() {
@@ -403,7 +468,7 @@ public class CampsiteServiceTest {
 
         when(repository.findById(existingId)).thenReturn(ofNullable(existingReservation));
 
-        service.delete(existingId);
+        service.deleteReservation(existingId);
     }
 
     @Test(expected = NoSuchElementException.class)
@@ -412,6 +477,19 @@ public class CampsiteServiceTest {
 
         when(repository.findById(nonExistingId)).thenReturn(empty());
 
-        service.delete(nonExistingId);
+        service.deleteReservation(nonExistingId);
+    }
+
+    @Test(expected = RuntimeException.class)
+    public void whenWeDeleteReservationAndRepositoryThrowsAnExceptionPropagateIt() {
+        final LocalDate start = LocalDate.now().plusDays(1);
+        final LocalDate end = start.plusDays(1);
+        final User validUser = buildValidUser();
+        final String existingId = "some-test-unique-id";
+        final CampsiteReservation existingReservation = CampsiteReservation.builder().id(existingId).startDate(start).endDate(end).user(validUser).build();
+
+        when(repository.findById(existingId)).thenReturn(ofNullable(existingReservation));
+        doThrow(new RuntimeException("BOOM!")).when(repository).delete(any());
+        service.deleteReservation(existingId);
     }
 }
