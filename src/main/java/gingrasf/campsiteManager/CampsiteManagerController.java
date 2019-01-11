@@ -4,7 +4,15 @@ import gingrasf.campsiteManager.model.CampsiteAvailability;
 import gingrasf.campsiteManager.model.CampsiteReservation;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
 import java.time.LocalDate;
@@ -30,7 +38,7 @@ public class CampsiteManagerController {
 
     @PutMapping("/reservation")
     @Transactional
-    public String createReservation(@Valid @RequestBody CampsiteReservation reservation) throws InterruptedException {
+    public String createReservation(@Valid @RequestBody CampsiteReservation reservation) {
         return campsiteService.createReservation(reservation.getUser(), reservation.getStartDate(), reservation.getEndDate()).getId();
     }
     @GetMapping("/reservation")
@@ -40,11 +48,11 @@ public class CampsiteManagerController {
 
     @DeleteMapping("/reservation/{id}")
     public void delete(@PathVariable("id") String id) {
-        campsiteService.delete(id);
+        campsiteService.deleteReservation(id);
     }
 
     @PostMapping("/reservation/{id}")
-    public CampsiteReservation update(@PathVariable("id") String id, @Valid @RequestBody CampsiteReservation reservation) throws InterruptedException {
+    public CampsiteReservation update(@PathVariable("id") String id, @Valid @RequestBody CampsiteReservation reservation) {
         return campsiteService.updateReservation(id, reservation);
     }
 }

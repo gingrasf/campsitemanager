@@ -2,11 +2,10 @@ package gingrasf.campsiteManager;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static java.lang.String.format;
 import static java.lang.String.join;
-import static java.util.stream.Collectors.*;
+import static java.util.stream.Collectors.toList;
 
 
 /**

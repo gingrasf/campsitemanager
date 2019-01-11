@@ -1,18 +1,15 @@
 package gingrasf.campsiteManager;
 
-import gingrasf.campsiteManager.io.CampsiteRepository;
 import gingrasf.campsiteManager.model.CampsiteAvailability;
 import gingrasf.campsiteManager.model.CampsiteReservation;
 import gingrasf.campsiteManager.model.User;
-import org.springframework.transaction.annotation.Transactional;
+import gingrasf.campsiteManager.persistence.AvailableDateLockRepository;
+import gingrasf.campsiteManager.persistence.CampsiteRepository;
 
 import java.time.LocalDate;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.ReentrantLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
 import java.util.stream.LongStream;
 import java.util.stream.StreamSupport;
@@ -25,12 +22,13 @@ public class CampsiteService {
 
 
     private final CampsiteRepository repository;
+    private final AvailableDateLockRepository availableDateLockRepository;
     private final CampsiteReservationValidator validator;
-    private final ReentrantLock lock = new ReentrantLock();
 
-    public CampsiteService(CampsiteRepository repository, CampsiteReservationValidator validator) {
+    public CampsiteService(CampsiteRepository repository, AvailableDateLockRepository availableDateLockRepository, CampsiteReservationValidator validator) {
         this.repository = repository;
         this.validator = validator;
+        this.availableDateLockRepository = availableDateLockRepository;
     }
 
     public CampsiteAvailability getAvailabilityBetween(LocalDate from, LocalDate until) {
@@ -45,13 +43,13 @@ public class CampsiteService {
         return CampsiteAvailability.builder().availableDates(availableDates).searchPeriodStart(from).searchPeriodEnd(until).build();
     }
 
-    public CampsiteReservation createReservation(User user, LocalDate startDate, LocalDate endDate) throws InterruptedException {
+    public CampsiteReservation createReservation(User user, LocalDate startDate, LocalDate endDate) {
         validator.validateReservation(startDate, endDate);
         validator.validateUser(user);
 
-        if (lock.tryLock(1, TimeUnit.SECONDS)) {
+        if(lockDatesForProcessing(startDate, endDate)) {
             try {
-                checkForConflicts(startDate, endDate);
+                checkForAvailability(startDate, endDate);
                 final CampsiteReservation reservation = CampsiteReservation.builder()
                         .id(UUID.randomUUID().toString())
                         .startDate(startDate)
@@ -60,13 +58,28 @@ public class CampsiteService {
                         .build();
                 return repository.save(reservation);
             } finally {
-                lock.unlock();
+                unlockDates(startDate, endDate);
             }
         }
-        throw new TooManyConcurrentRequestException("There's too much load on the server at the moment, please try your request again later.");
+        throw new CampsiteReservationConflictException(findLocalDateBetween(startDate, endDate));
     }
 
-    private void checkForConflicts(LocalDate startDate, LocalDate endDate) {
+    /**
+     * Verify if we can get a lock on all dates we need. If not throw a CampsiteReservationConflictException
+     */
+    private boolean lockDatesForProcessing(LocalDate startDate, LocalDate endDate) {
+        final List<LocalDate> dates = findLocalDateBetween(startDate, endDate);
+        return dates.stream()
+                .map(date -> availableDateLockRepository.lockAvailableDate(date, Thread.currentThread().getName()))
+                .reduce((b1, b2) -> b1 && b2).orElse(false);
+    }
+
+    private void unlockDates(LocalDate startDate, LocalDate endDate) {
+        findLocalDateBetween(startDate, endDate).stream()
+                .forEach(date -> availableDateLockRepository.freeAvailableDate(date, Thread.currentThread().getName()));
+    }
+
+    private void checkForAvailability(LocalDate startDate, LocalDate endDate) {
         final List<LocalDate> reservedDates = getReservedDatesBetween(startDate, endDate);
         if (!reservedDates.isEmpty()) {
             throw new CampsiteReservationConflictException(reservedDates);
@@ -93,28 +106,30 @@ public class CampsiteService {
         return repository.findAll();
     }
 
-    public CampsiteReservation updateReservation(String id, CampsiteReservation reservation) throws InterruptedException {
+    public CampsiteReservation updateReservation(String id, CampsiteReservation reservation) {
         final CampsiteReservation entity = repository.findById(id)
                 .orElseThrow(() -> new NoSuchElementException(format("No reservation with id=%s was found", id)));
         if (!entity.getUser().equals(reservation.getUser())) {
             throw new IllegalArgumentException("It's not possible to change the owner of a reservation, only the reservation time can be changed");
         }
-        validator.validateReservation(reservation.getStartDate(), reservation.getEndDate());
-        if (lock.tryLock(1, TimeUnit.SECONDS)) {
+        final LocalDate startDate = reservation.getStartDate();
+        final LocalDate endDate = reservation.getEndDate();
+        validator.validateReservation(startDate, endDate);
+        if(lockDatesForProcessing(startDate, endDate)) {
             try {
-                checkForConflicts(reservation.getStartDate(), reservation.getEndDate());
-                entity.setStartDate(reservation.getStartDate());
-                entity.setEndDate(reservation.getEndDate());
+                checkForAvailability(startDate, endDate);
+                entity.setStartDate(startDate);
+                entity.setEndDate(endDate);
                 return repository.save(entity);
             } finally {
-                lock.unlock();
+                unlockDates(startDate, endDate);
             }
         }
-        throw new TooManyConcurrentRequestException("There's too much load on the server at the moment, please try your request again later.");
+        throw new CampsiteReservationConflictException(findLocalDateBetween(startDate, endDate));
 
     }
 
-    public void delete(String id) {
+    public void deleteReservation(String id) {
         final CampsiteReservation entity = repository.findById(id)
                 .orElseThrow(() -> new NoSuchElementException(format("No reservation with id=%s was found", id)));
         repository.delete(entity);

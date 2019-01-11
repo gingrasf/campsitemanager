@@ -1,6 +1,7 @@
 package gingrasf.campsiteManager;
 
 
+import gingrasf.campsiteManager.model.AvailableDateLock;
 import gingrasf.campsiteManager.model.CampsiteAvailability;
 import gingrasf.campsiteManager.model.CampsiteReservation;
 import gingrasf.campsiteManager.model.User;
@@ -13,13 +14,16 @@ import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.http.*;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Random;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
@@ -52,7 +56,9 @@ public class CampsiteManagerControllerIntegrationTest {
 
     @Before
     public void setup(){
+
         mongoTemplate.dropCollection(CampsiteReservation.class);
+        mongoTemplate.dropCollection(AvailableDateLock.class);
     }
 
 

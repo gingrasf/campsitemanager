@@ -11,6 +11,9 @@ public class CampsiteReservationValidator {
 
     public static final int MAX_RESERVATION_DURATION = 3;
 
+    /**
+     * Validate is the requested start and end dates are valid for a reservation. If they are not an IllegalArgumentException will be thrown.
+     */
     public void validateReservation(LocalDate startDate, LocalDate endDate) {
         final LocalDate today = LocalDate.now();
         if (endDate.isBefore(startDate)) {
@@ -34,6 +37,9 @@ public class CampsiteReservationValidator {
         }
     }
 
+    /**
+     * Validate that the user is valid for a reservation. If it is not an IllegalArgumentException will be thrown.
+     */
     public void validateUser(User user) {
         if (user == null) {
             throw new IllegalArgumentException("Reservation must have a user.");
