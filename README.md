@@ -57,8 +57,7 @@ mvn spring-boot:run
 
 ### How to use the application
 
-Once the application is running, it can be used as a REST API. A way to do that is to use a tool like [Postman](https://www.getpostman.com/) and to import the
-[collection for this API](/postman/Campsite Manager.postman_collection.json)
+Once the application is running, it can be used as a REST API. A way to do that is to use a tool like [Postman](https://www.getpostman.com/) and to import the [collection for this API](/postman/Campsite Manager.postman_collection.json)
 
 [Swagger](https://swagger.io/) is also available at http://localhost:8080/swagger-ui.html but I didn't fine tune it.
 
